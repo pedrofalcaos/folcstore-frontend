@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import { Provider } from "./provider";
+import { CommerceSession } from './components/CommerceSession';
 import { ConditionalHeader } from "../app/components/ConditionalHeader";
 import { Footer } from "@/app/components/Footer";
 
@@ -17,6 +18,7 @@ export default function RootLayout({
         <html lang="pt-BR">
             <body suppressHydrationWarning={true} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', margin: 0 }}>
                 <Provider>
+                    <CommerceSession />
                     {/* Cabeçalho Inteligente que muda conforme a rota (Cliente, Artesão ou Admin) */}
                     <ConditionalHeader />
 

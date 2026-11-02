@@ -3,7 +3,7 @@ export interface Artesao {
     nome: string;
     cpf: string;
     email: string;
-    senha: string;
+    senha?: string;
     regiaoProducao: string;
     telefone: string;
     biografia: string;

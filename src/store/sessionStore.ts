@@ -5,6 +5,7 @@ import { persist } from 'zustand/middleware';
 import { Artesao, Customer, Admin } from '@/types';
 
 interface SessionState {
+    token: string | null;
     customer: Customer | null;
     artesao: Artesao | null;
     admin: Admin | null;
@@ -27,26 +28,27 @@ interface SessionState {
 export const sessionStore = create<SessionState>()(
     persist(
         (set, get) => ({
+            token: null,
             customer: null,
             artesao: null,
             admin: null,
 
-            isCustomerLogged: () => get().customer !== null,
+            isCustomerLogged: () => get().token !== null && get().customer !== null,
             salvarCustomer: (customer) => set({ customer }),
-            logoutCustomer: () => set({ customer: null }),
+            logoutCustomer: () => get().logoutAll(),
 
-            isArtesaoLogged: () => get().artesao !== null,
+            isArtesaoLogged: () => get().token !== null && get().artesao !== null,
             salvarArtesao: (artesao) => set({ artesao }),
-            logoutArtesao: () => set({ artesao: null }),
+            logoutArtesao: () => get().logoutAll(),
 
-            isAdminLogged: () => get().admin !== null,
+            isAdminLogged: () => get().token !== null && get().admin !== null,
             salvarAdmin: (admin) => set({ admin }),
-            logoutAdmin: () => set({ admin: null }),
+            logoutAdmin: () => get().logoutAll(),
 
-            logoutAll: () => set({ customer: null, artesao: null, admin: null }),
+            logoutAll: () => set({ token: null, customer: null, artesao: null, admin: null }),
         }),
         {
-            name: 'session-storage',
+            name: 'session-jwt-storage',
         }
     )
 );

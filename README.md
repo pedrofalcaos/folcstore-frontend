@@ -1,3 +1,18 @@
+## Compra local com o backend Express
+
+Login/cadastro JWT, catálogo, carrinho, endereços, checkout e histórico agora usam
+o backend em `http://localhost:3003/api`. Inicie `npm run dev` no backend e neste
+frontend e abra `http://localhost:3000/customer/register` para começar.
+O pagamento é apenas simulado; nenhum dado de cartão é necessário.
+
+Veja o [guia da compra local](https://github.com/pedrofalcaos/folcstore-backend/blob/main/docs/compra-local.md).
+Sessões e cadastros antigos do json-server precisam de novo login/cadastro no Express.
+Use `NEXT_PUBLIC_BACKEND_URL` para configurar a URL. Os comandos e endpoints legados
+descritos abaixo ainda são referência das funcionalidades não migradas.
+
+Testes: `npm run test:recommendations`, `npm run test:e2e` (Chrome instalado e backend
+em pasta irmã) e `npm run build`.
+
 <div align="center">
 
 # 🏺 FolcStore — Marketplace de Artesanato

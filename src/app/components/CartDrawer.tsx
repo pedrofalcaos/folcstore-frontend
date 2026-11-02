@@ -25,12 +25,16 @@ interface CartDrawerProps {
 
 export function CartDrawer({ open, onClose }: CartDrawerProps) {
     const [isHydrated, setIsHydrated] = useState(false);
-    const { items = [], removeItem, updateQuantity, clearCart, totalPrice } = useCartStore();
+    const { items = [], removeItem, updateQuantity, clearCart, totalPrice, erro, carregando, sincronizar } = useCartStore();
     const router = useRouter();
 
     useEffect(() => {
         setIsHydrated(true);
     }, []);
+
+    useEffect(() => {
+        if (open && sessionStore.getState().isCustomerLogged()) void sincronizar();
+    }, [open, sincronizar]);
 
     const handleFinalizarCompra = () => {
         onClose();
@@ -55,6 +59,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                         <Drawer.Header borderBottomWidth="1px">Seu Carrinho</Drawer.Header>
 
                         <Drawer.Body>
+                            {erro && <Text role="alert" color="red.600" py={3}>{erro}</Text>}
                             {!hasItems ? (
                                 <VStack py={10} gap={3}>
                                     <Text fontSize="lg" color="gray.400">
@@ -140,7 +145,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                                         R$ {totalPrice().toFixed(2)}
                                     </Text>
                                 </HStack>
-                                <Button w="100%" colorPalette="brand" onClick={handleFinalizarCompra}>
+                                <Button w="100%" colorPalette="brand" onClick={handleFinalizarCompra} disabled={carregando || !!erro}>
                                     Finalizar Compra
                                 </Button>
                                 <Button w="100%" variant="ghost" colorPalette="red" size="sm" onClick={clearCart}>

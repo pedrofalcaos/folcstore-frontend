@@ -79,9 +79,12 @@ export default function EnderecoManager({
     }
   };
 
-  const handleRemoverEndereco = (enderecoId: string) => {
-    const enderecosAtualizados = customer.enderecos.filter((e) => e.id !== enderecoId);
-    salvarCustomer({ ...customer, enderecos: enderecosAtualizados });
+  const handleRemoverEndereco = async (enderecoId: string) => {
+    try {
+      salvarCustomer(await addressService.removeEndereco(customer, enderecoId));
+    } catch {
+      setErrorMsg('Não foi possível remover o endereço.');
+    }
   };
 
   return (

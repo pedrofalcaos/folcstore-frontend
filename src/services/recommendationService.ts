@@ -1,5 +1,5 @@
-import { Product } from "@/types/product";
-import { Order } from "@/types/order";
+import type { Product } from "@/types/product";
+import type { Order } from "@/types/order";
 
 export const recommendationService = {
   getRecommendedIds(
@@ -8,6 +8,10 @@ export const recommendationService = {
     todasCompras: Order[],
     limite = 4
   ): string[] {
+    if (!Number.isInteger(limite) || limite <= 0) return [];
+
+    const disponiveis = produtos.filter((p) => p.ativo !== false && p.quantidadeEstoque > 0);
+    const idsDisponiveis = new Set(disponiveis.map((p) => String(p.id)));
     const idsComprados = new Set(historicoCompras.map((o) => String(o.idProduto)));
 
     if (idsComprados.size > 0) {
@@ -16,7 +20,7 @@ export const recommendationService = {
           .filter((p) => idsComprados.has(String(p.id)))
           .map((p) => p.categoria)
       );
-      const relacionados = produtos.filter(
+      const relacionados = disponiveis.filter(
         (p) => categoriasCompradas.has(p.categoria) && !idsComprados.has(String(p.id))
       );
       if (relacionados.length > 0) {
@@ -37,7 +41,7 @@ export const recommendationService = {
 
     if (maisVendidosIds.length > 0) {
       const idsValidos = maisVendidosIds.filter(
-        (id) => !idsComprados.has(id) && produtos.some((p) => String(p.id) === id)
+        (id) => !idsComprados.has(id) && idsDisponiveis.has(id)
       );
       if (idsValidos.length > 0) {
         return idsValidos.slice(0, limite);
@@ -45,8 +49,8 @@ export const recommendationService = {
     }
 
     // Fallback final (banco novo/sem pedidos ainda): produtos mais recentes
-    return [...produtos]
-      .filter((p) => p.ativo !== false && !idsComprados.has(String(p.id)))
+    return disponiveis
+      .filter((p) => !idsComprados.has(String(p.id)))
       .sort((a, b) => (b.dataCriacao || "").localeCompare(a.dataCriacao || ""))
       .slice(0, limite)
       .map((p) => String(p.id));

@@ -47,7 +47,6 @@ export default function CustomerDashboard() {
 
   const router = useRouter();
 
-  // Funções corretas vindas do seu sessionStore.ts
   const logoutCustomer = sessionStore((state) => state.logoutCustomer);
   const isCustomerLogged = sessionStore((state) => state.isCustomerLogged);
   const customer = sessionStore((state) => state.customer);
@@ -83,16 +82,17 @@ export default function CustomerDashboard() {
     async function loadRecomendados() {
       if (!customer || products.length === 0) return;
       try {
-        const [historico, todasCompras] = await Promise.all([
-          orderService.getComprasPorComprador(customer.id),
-          orderService.getTodasCompras(),
-        ]);
+        const todasCompras = await orderService.getTodasCompras();
+        const historico = todasCompras.filter(
+          (compra) => String(compra.idComprador) === String(customer.id),
+        );
         const ids = recommendationService.getRecommendedIds(
           products,
           historico,
           todasCompras,
         );
-        setRecomendados(products.filter((p) => ids.includes(String(p.id))));
+        const produtosPorId = new Map(products.map((p) => [String(p.id), p]));
+        setRecomendados(ids.map((id) => produtosPorId.get(id)).filter((p): p is Product => p !== undefined));
       } catch (err) {
         console.error("Erro ao carregar recomendações:", err);
       }

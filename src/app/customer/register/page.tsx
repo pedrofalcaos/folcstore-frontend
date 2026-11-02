@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { userService } from "@/services/userService";
+import { mensagemErro } from '@/services/backendApi';
+import { validarCadastro } from '@/services/cadastroValidation';
 import { sessionStore } from "@/store/sessionStore";
 import NextLink from 'next/link';
 import { Customer } from "@/types";
@@ -56,6 +58,8 @@ export default function CustomerRegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const problema = validarCadastro(formData);
+    if (problema) { setError(problema); return; }
     setIsLoading(true);
     setError("");
 
@@ -84,16 +88,13 @@ export default function CustomerRegisterPage() {
       const novoCustomer = await userService.registerCustomer(customerPayload);
       salvarCustomer(novoCustomer);
       router.push("/customer");
-    } catch (err: any) {
-      if (err.message === "EMAIL_EXISTS") {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message === "EMAIL_EXISTS") {
         setError("Este e-mail já está cadastrado.");
-      } else if (err.message === "CPF_EXISTS") {
+      } else if (err instanceof Error && err.message === "CPF_EXISTS") {
         setError("Este CPF já está cadastrado.");
       } else {
-        setError(
-          "Ocorreu um erro ao tentar registrar. Verifique os dados e tente novamente.",
-        );
-        console.error(err);
+        setError(mensagemErro(err, 'Não foi possível cadastrar. Confira os dados ou a conexão com a API.'));
       }
     } finally {
       setIsLoading(false);
@@ -135,6 +136,7 @@ export default function CustomerRegisterPage() {
 
           {error && (
             <Text
+              role="alert"
               color="red.500"
               fontSize="sm"
               textAlign="center"
@@ -144,7 +146,7 @@ export default function CustomerRegisterPage() {
             </Text>
           )}
 
-          <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+          <form noValidate onSubmit={handleSubmit} style={{ width: "100%" }}>
             <Grid
               templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
               gap={4}
@@ -207,7 +209,9 @@ export default function CustomerRegisterPage() {
                     value={formData.senha}
                     onChange={handleChange}
                     placeholder="********"
+                    aria-describedby="ajuda-senha"
                   />
+                  <Text id="ajuda-senha" fontSize="xs" color="gray.600">Use pelo menos 8 caracteres.</Text>
                 </Field.Root>
               </GridItem>
 

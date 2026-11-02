@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { sessionStore } from "@/store/sessionStore";
 import { userService } from "@/services/userService";
+import { mensagemErro } from '@/services/backendApi';
+import { validarSenha } from '@/services/cadastroValidation';
 import {
   Box,
   Button,
@@ -44,6 +46,8 @@ export default function CustomerLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const problema = validarSenha(senha);
+    if (problema) { setError(problema); return; }
     setIsLoading(true);
     setError("");
 
@@ -57,8 +61,7 @@ export default function CustomerLoginPage() {
         setError("E-mail ou senha inválidos.");
       }
     } catch (err) {
-      setError("Ocorreu um erro ao tentar fazer login.");
-      console.error(err);
+      setError(mensagemErro(err, 'Não foi possível entrar. Verifique a conexão com a API.'));
     } finally {
       setIsLoading(false);
     }
@@ -83,6 +86,7 @@ export default function CustomerLoginPage() {
 
           {error && (
             <Text
+              role="alert"
               color="red.500"
               fontSize="sm"
               textAlign="center"

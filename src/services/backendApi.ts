@@ -22,5 +22,12 @@ backendApi.interceptors.response.use(response => response, error => {
 });
 
 export function mensagemErro(error: unknown, padrao = 'Não foi possível concluir a operação.') {
-  return axios.isAxiosError(error) ? error.response?.data?.erro || padrao : padrao;
+  if (!axios.isAxiosError(error)) return padrao;
+  const dados = error.response?.data;
+  if (Array.isArray(dados?.campos)) {
+    const mensagens = dados.campos.map((campo: { mensagem?: unknown }) => campo.mensagem)
+      .filter((mensagem: unknown): mensagem is string => typeof mensagem === 'string');
+    if (mensagens.length) return mensagens.join(' ');
+  }
+  return typeof dados?.erro === 'string' ? dados.erro : padrao;
 }

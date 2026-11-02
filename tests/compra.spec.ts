@@ -1,5 +1,29 @@
 import { test, expect } from '@playwright/test';
 
+test('cadastro inválido informa o campo e erro 400 aparece sem erro de console', async ({ page }) => {
+  const errosConsole: string[] = [];
+  page.on('console', mensagem => { if (mensagem.type() === 'error' && mensagem.text().includes('AxiosError')) errosConsole.push(mensagem.text()); });
+  await page.goto('/customer/login');
+  await page.locator('input[type="email"]').fill('formulario@example.com');
+  await page.locator('input[type="password"]').fill('123456');
+  await page.getByRole('button', { name: 'Entrar como Cliente' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'A senha precisa ter pelo menos 8 caracteres.' })).toBeVisible();
+  await page.goto('/customer/register');
+  const campos = { nome: 'Pessoa Teste', cpf: '11122233344', email: 'formulario@example.com', senha: '123456',
+    telefone: '81999990000', cep: '50000-000', rua: 'Rua de teste', numero: '10', bairro: 'Centro', cidade: 'Recife', estado: 'pe' };
+  for (const [campo, valor] of Object.entries(campos)) await page.locator(`input[name="${campo}"]`).fill(valor);
+  await page.getByRole('button', { name: 'Criar conta de Comprador' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'A senha precisa ter pelo menos 8 caracteres.' })).toBeVisible();
+  await page.locator('input[name="senha"]').fill('SenhaTeste123!');
+  await page.route('**/api/auth/register', route => route.fulfill({ status: 400, contentType: 'application/json',
+    headers: { 'Access-Control-Allow-Origin': 'http://127.0.0.1:3100' },
+    body: JSON.stringify({ erro: 'Dados inválidos', campos: [{ campo: 'enderecos.0.cep', mensagem: 'CEP inválido' }] }),
+  }));
+  await page.getByRole('button', { name: 'Criar conta de Comprador' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'CEP inválido' })).toBeVisible();
+  expect(errosConsole).toEqual([]);
+});
+
 test('cadastro, carrinho persistido e confirmação recuperada sem pedido duplicado', async ({ page, request }) => {
   const erros: string[] = [];
   page.on('pageerror', error => erros.push(error.message));

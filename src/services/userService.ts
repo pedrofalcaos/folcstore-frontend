@@ -21,9 +21,11 @@ async function login(email: string, senha: string, perfil: UsuarioApi['perfil'])
 }
 
 async function cadastrar(dados: Omit<Customer, 'id'> | Omit<Artesao, 'id'>, perfil: 'COMPRADOR' | 'ARTESAO') {
-  const payload = { nome: dados.nome, email: dados.email, senha: dados.senha, cpf: dados.cpf || undefined,
-    telefone: dados.telefone, perfil,
-    enderecos: 'enderecos' in dados ? dados.enderecos.map(({ id: _id, ...endereco }) => endereco) : [],
+  const payload = { nome: dados.nome.trim(), email: dados.email.trim(), senha: dados.senha, cpf: dados.cpf || undefined,
+    telefone: dados.telefone.trim(), perfil,
+    enderecos: 'enderecos' in dados ? dados.enderecos.map(({ id: _id, ...endereco }) => ({
+      ...endereco, cep: endereco.cep.replace(/\D/g, ''), estado: endereco.estado.trim().toUpperCase(),
+    })) : [],
   };
   try {
     const { data } = await backendApi.post<SessaoApi>('/auth/register', payload);

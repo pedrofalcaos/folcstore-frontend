@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { sessionStore } from "@/store/sessionStore";
 import { productService } from "@/services/productService";
 import { orderService } from "@/services/orderService";
-import { recommendationService } from "@/services/recommendationService";
+import { buscarRecomendacoes } from "@/services/recommendationApiService";
 import { Product } from "@/types/product";
 import NextLink from "next/link";
 import { useCartStore } from "@/store/cartStore";
@@ -79,6 +79,7 @@ export default function CustomerDashboard() {
   }, [isCustomerLogged]);
 
   useEffect(() => {
+    let ativo = true;
     async function loadRecomendados() {
       if (!customer || products.length === 0) return;
       try {
@@ -86,18 +87,15 @@ export default function CustomerDashboard() {
         const historico = todasCompras.filter(
           (compra) => String(compra.idComprador) === String(customer.id),
         );
-        const ids = recommendationService.getRecommendedIds(
-          products,
-          historico,
-          todasCompras,
-        );
+        const ids = await buscarRecomendacoes(products, historico);
         const produtosPorId = new Map(products.map((p) => [String(p.id), p]));
-        setRecomendados(ids.map((id) => produtosPorId.get(id)).filter((p): p is Product => p !== undefined));
+        if (ativo) setRecomendados(ids.map((id) => produtosPorId.get(id)).filter((p): p is Product => p !== undefined));
       } catch (err) {
-        console.error("Erro ao carregar recomendações:", err);
+        if (ativo) setRecomendados([]);
       }
     }
     loadRecomendados();
+    return () => { ativo = false; };
   }, [customer, products]);
 
   if (!mounted || !isCustomerLogged()) {
